@@ -27,17 +27,18 @@ An installer will be provided in future updates to automate the PATH addition.
 
 ## TODO
 
-- Add build script
-- Add custom scripts similar to npm options for Node.js
-- Add support for global extensions, allowing extensions to be installed globally for use in every project
-- Support more versions and variants, hopefully dynamic versions
-  - For now, just Godot 4.3 and 4.3 Mono
-  - Support only for Windows
-  - In the future, the objective is to support all versions dynamically
-- Support templates for starting projects
-  - example: menu, platformer, 2d, 3d, etc.
-- Add support for custom Godot versions
-  - example: custom Godot Steam version
+- [ ] Add build script
+- [ ] Add custom scripts similar to npm options for Node.js
+- [ ] Add support for global extensions, allowing extensions to be installed globally for use in every project
+- [ ] Support more versions and variants, hopefully dynamic versions
+  - [ ] For now, just Godot 4.3 and 4.3 Mono
+  - [ ] Support only for Windows
+  - [ ] In the future, the objective is to support all versions dynamically
+- [ ] Support templates for starting projects
+  - [ ] example: menu, platformer, 2d, 3d, etc.
+- [ ] Add support for custom Godot versions
+  - [ ] example: custom Godot Steam version
+
 
 ## How to Contribute
 
