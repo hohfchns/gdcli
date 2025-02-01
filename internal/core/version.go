@@ -8,54 +8,83 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type GodotVersion struct {
-	Version  string
-	DotNet   bool
-	URL      string
-	Checksum string
+    DisplayName string // User-friendly name for selection
+    Version     string // Base version number
+    DotNet      bool   // Whether this is a Mono/.NET version
+    URL         string // Download URL
 }
 
 var VersionManifest = []GodotVersion{
-	{
-		Version: "4.3.0",
-		DotNet:  false,
-		URL:     "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_win64.exe.zip",
-	},
-	{
-		Version: "4.3.0",
-		DotNet:  true,
-		URL:     "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_mono_win64.zip",
-	},
-	// Add other versions and platforms as needed
+    {
+        DisplayName: "4.3.0 (Standard)",
+        Version:     "4.3.0",
+        DotNet:      false,
+        URL:         "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_win64.exe.zip",
+    },
+    {
+        DisplayName: "4.3.0 (Mono)",
+        Version:     "4.3.0",
+        DotNet:      true,
+        URL:         "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_mono_win64.zip",
+    },
+    // Add more versions as needed
 }
 
-func InstallGodotVersion(version string, dotnet bool) error {
-	// Find version in manifest
-	var dlUrl string
-	for _, v := range VersionManifest {
-		if v.Version == version && v.DotNet == dotnet {
-			dlUrl = v.URL
-			break
-		}
-	}
+func GetVersionByIdentifier(identifier string) (GodotVersion, error) {
+    var matches []GodotVersion
+    
+    // First try exact matches
+    for _, v := range VersionManifest {
+        if strings.EqualFold(v.DisplayName, identifier) || v.Version == identifier {
+            return v, nil
+        }
+    }
+    
+    // Then try partial matches
+    for _, v := range VersionManifest {
+        if strings.Contains(strings.ToLower(v.DisplayName), strings.ToLower(identifier)) {
+            matches = append(matches, v)
+        }
+    }
+    
+    switch len(matches) {
+    case 1:
+        return matches[0], nil
+    case 0:
+        return GodotVersion{}, fmt.Errorf("no versions found matching '%s'", identifier)
+    default:
+        var options []string
+        for _, m := range matches {
+            options = append(options, m.DisplayName)
+        }
+        return GodotVersion{}, fmt.Errorf("multiple matches found:\n%s", strings.Join(options, "\n"))
+    }
+}
 
-	if dlUrl == "" {
-		return fmt.Errorf("version %s (%s) not found", version, dotnetStr(dotnet))
-	}
 
-	if err := os.MkdirAll("dependencies", 0755); err != nil {
-		return err
-	}
+func InstallGodotVersion(version GodotVersion) error {
+    // Directly use the version struct fields
+    if version.URL == "" {
+        return fmt.Errorf("no URL found for version %s", version.DisplayName)
+    }
 
-	zipName := filepath.Base(dlUrl)
-	zipPath := filepath.Join("dependencies", zipName)
-	
-	fmt.Printf("Downloading %s...\n", zipName)
-	if err := downloadFile(zipPath, dlUrl); err != nil {
-		return err
-	}
+    // Create dependencies directory
+    if err := os.MkdirAll("dependencies", 0755); err != nil {
+        return err
+    }
+
+    // Rest of the installation logic using version.URL directly
+    zipName := filepath.Base(version.URL)
+    zipPath := filepath.Join("dependencies", zipName)
+    
+    fmt.Printf("Downloading %s...\n", zipName)
+    if err := downloadFile(zipPath, version.URL); err != nil {
+        return err
+    }
 
     tempDir := filepath.Join("dependencies", "temp_extract")
     defer os.RemoveAll(tempDir) // Clean up temp directory
@@ -77,7 +106,7 @@ func InstallGodotVersion(version string, dotnet bool) error {
         return err
     }
 
-    fmt.Printf("Successfully installed Godot %s (%s)\n", version, dotnetStr(dotnet))
+    fmt.Printf("Successfully installed Godot %s\n", version.DisplayName)
     return nil
 }
 
@@ -124,74 +153,114 @@ func moveFilesFromSubdir(src, dest string) error {
 
 
 func renameExecutables(targetDir string) error {
-    files, err := os.ReadDir(targetDir)
-    if err != nil {
-        return err
-    }
+	files, err := os.ReadDir(targetDir)
+	if err != nil {
+		return err
+	}
 
-    var mainExe, consoleExe string
+	var mainExe, consoleExe string
 
-    // Identify files (case-insensitive check)
-    for _, f := range files {
-        name := f.Name()
-        lowerName := strings.ToLower(name)
-        
-        if strings.Contains(lowerName, "_console") && strings.HasSuffix(lowerName, ".exe") {
-            consoleExe = name
-        } else if strings.HasSuffix(lowerName, ".exe") && !strings.Contains(lowerName, "_console") {
-            mainExe = name
-        }
-    }
+	// Identify files (case-insensitive check)
+	for _, f := range files {
+		name := f.Name()
+		lowerName := strings.ToLower(name)
 
-    // Rename main executable
-    if mainExe != "" {
-        mainPath := filepath.Join(targetDir, mainExe)
-        newMainPath := filepath.Join(targetDir, "godot.exe")
-        if err := os.Rename(mainPath, newMainPath); err != nil {
-            return fmt.Errorf("failed to rename main executable: %v", err)
-        }
-        fmt.Printf("Renamed %s -> godot.exe\n", mainExe)
-    }
+		if strings.Contains(lowerName, "_console") && strings.HasSuffix(lowerName, ".exe") {
+			consoleExe = name
+		} else if strings.HasSuffix(lowerName, ".exe") && !strings.Contains(lowerName, "_console") {
+			mainExe = name
+		}
+	}
 
-    // Rename console executable
-    if consoleExe != "" {
-        consolePath := filepath.Join(targetDir, consoleExe)
-        newConsolePath := filepath.Join(targetDir, "godot_console.exe")
-        if err := os.Rename(consolePath, newConsolePath); err != nil {
-            return fmt.Errorf("failed to rename console executable: %v", err)
-        }
-        fmt.Printf("Renamed %s -> godot_console.exe\n", consoleExe)
-    }
+	// Define new file paths
+	newMainPath := filepath.Join(targetDir, "godot.exe")
+	newConsolePath := filepath.Join(targetDir, "godot_console.exe")
 
-    // Enhanced file walking for cleanup
-    return filepath.Walk(targetDir, func(path string, info os.FileInfo, err error) error {
-        if err != nil {
-            return nil
-        }
+	// Remove existing files if they exist
+	if _, err := os.Stat(newMainPath); err == nil {
+		if err := os.Remove(newMainPath); err != nil {
+			return fmt.Errorf("failed to remove existing godot.exe: %v", err)
+		}
+	}
+	if _, err := os.Stat(newConsolePath); err == nil {
+		if err := os.Remove(newConsolePath); err != nil {
+			return fmt.Errorf("failed to remove existing godot_console.exe: %v", err)
+		}
+	}
 
-        // Skip root directory
-        if path == targetDir {
-            return nil
-        }
+	// Wait for the filesystem to release deleted files
+	time.Sleep(1 * time.Second)
 
-        // Delete if not an exe file
-        if !info.IsDir() && !strings.EqualFold(filepath.Ext(info.Name()), ".exe") {
-            if err := os.Remove(path); err != nil {
-                fmt.Printf("Warning: Failed to remove file %s: %v\n", path, err)
-            }
-        }
-        
-        // Remove empty directories
-        if info.IsDir() {
-            if entries, _ := os.ReadDir(path); len(entries) == 0 {
-                if err := os.Remove(path); err != nil {
-                    fmt.Printf("Warning: Failed to remove directory %s: %v\n", path, err)
-                }
-            }
-        }
-        
-        return nil
-    })
+	// Re-scan the directory after deletion
+	files, err = os.ReadDir(targetDir)
+	if err != nil {
+		return fmt.Errorf("failed to read directory after deletion: %v", err)
+	}
+
+	mainExe, consoleExe = "", ""
+	for _, f := range files {
+		name := f.Name()
+		lowerName := strings.ToLower(name)
+
+		if strings.Contains(lowerName, "_console") && strings.HasSuffix(lowerName, ".exe") {
+			consoleExe = name
+		} else if strings.HasSuffix(lowerName, ".exe") && !strings.Contains(lowerName, "_console") {
+			mainExe = name
+		}
+	}
+
+	// Retry mechanism in case of delays in file availability
+	retryCount := 3
+	for i := 0; i < retryCount; i++ {
+		if mainExe == "" || consoleExe == "" {
+			fmt.Println("Retrying file detection...")
+			time.Sleep(1 * time.Second)
+
+			// Re-scan the directory
+			files, err = os.ReadDir(targetDir)
+			if err != nil {
+				return fmt.Errorf("failed to read directory: %v", err)
+			}
+
+			mainExe, consoleExe = "", ""
+			for _, f := range files {
+				name := f.Name()
+				lowerName := strings.ToLower(name)
+
+				if strings.Contains(lowerName, "_console") && strings.HasSuffix(lowerName, ".exe") {
+					consoleExe = name
+				} else if strings.HasSuffix(lowerName, ".exe") && !strings.Contains(lowerName, "_console") {
+					mainExe = name
+				}
+			}
+		} else {
+			break
+		}
+	}
+
+	// Rename main executable
+	if mainExe != "" {
+		mainPath := filepath.Join(targetDir, mainExe)
+		if err := os.Rename(mainPath, newMainPath); err != nil {
+			return fmt.Errorf("failed to rename main executable: %v", err)
+		}
+		fmt.Printf("Renamed %s -> godot.exe\n", mainExe)
+	} else {
+		return fmt.Errorf("main executable not found after extraction")
+	}
+
+	// Rename console executable
+	if consoleExe != "" {
+		consolePath := filepath.Join(targetDir, consoleExe)
+		if err := os.Rename(consolePath, newConsolePath); err != nil {
+			return fmt.Errorf("failed to rename console executable: %v", err)
+		}
+		fmt.Printf("Renamed %s -> godot_console.exe\n", consoleExe)
+	} else {
+		fmt.Println("Warning: Console executable not found after extraction")
+	}
+
+	return nil
 }
 
 
@@ -256,11 +325,4 @@ func extractZip(src, dest string) error {
 		}
 	}
 	return nil
-}
-
-func dotnetStr(dotnet bool) string {
-	if dotnet {
-		return "Mono"
-	}
-	return "Standard"
 }

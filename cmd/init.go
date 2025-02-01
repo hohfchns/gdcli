@@ -29,6 +29,15 @@ func initCmd() *cobra.Command {
 }
 
 func runInit(cmd *cobra.Command, args []string) {
+    // Check if config already exists
+    if _, err := os.Stat("gdproj.json"); err == nil {
+        fmt.Println("Project already initialized. Run 'gdcli install' to install dependencies.")
+        return
+    } else if !os.IsNotExist(err) {
+        fmt.Printf("Error checking for existing config: %v\n", err)
+        return
+    }
+
     // Get current directory name
     wd, err := os.Getwd()
     if err != nil {
@@ -37,8 +46,12 @@ func runInit(cmd *cobra.Command, args []string) {
     }
     defaultProjectName := filepath.Base(wd)
 
-    // Interactive prompts
-	qs := []*survey.Question{
+    var versionOptions []string
+    for _, v := range core.VersionManifest {
+        versionOptions = append(versionOptions, v.DisplayName)
+    }
+
+    qs := []*survey.Question{
         {
             Name: "projectName",
             Prompt: &survey.Input{
@@ -48,25 +61,17 @@ func runInit(cmd *cobra.Command, args []string) {
         },
         {
             Name: "version",
-            Prompt: &survey.Input{
-                Message: "Godot version:",
-                Default: "4.3.0",
-            },
-        },
-        {
-            Name: "dotnet",
-            Prompt: &survey.Confirm{
-                Message: "Use .NET version?",
-                Default: false,
+            Prompt: &survey.Select{
+                Message: "Select Godot version:",
+                Options: versionOptions,
+                Default: versionOptions[0],
             },
         },
     }
 
-
     answers := struct {
         ProjectName string
         Version     string
-        DotNet      bool
     }{}
 
     if err := survey.Ask(qs, &answers); err != nil {
@@ -74,13 +79,19 @@ func runInit(cmd *cobra.Command, args []string) {
         return
     }
 
-    if err := config.CreateConfig(answers.Version, answers.ProjectName, answers.DotNet); err != nil {
+    selected, err := core.GetVersionByIdentifier(answers.Version)
+    if err != nil {
+        fmt.Printf("Version selection error: %v\n", err)
+        return
+    }
+
+    if err := config.CreateConfig(selected.Version, answers.ProjectName, selected.DotNet); err != nil {
         fmt.Printf("Error creating config: %v\n", err)
         return
     }
 
-    fmt.Println("Installing Godot version...")
-    if err := core.InstallGodotVersion(answers.Version, answers.DotNet); err != nil {
+    fmt.Printf("Installing Godot %s...\n", selected.DisplayName)
+    if err := core.InstallGodotVersion(selected); err != nil {
         fmt.Printf("Installation failed: %v\n", err)
         return
     }
@@ -91,7 +102,7 @@ func runInit(cmd *cobra.Command, args []string) {
     }
 
     updateGitignore()
-	runOpen(cmd, args)
+    runOpen(cmd, args)
 }
 
 func createGodotProjectFile(projectName string) error {

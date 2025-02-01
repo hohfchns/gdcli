@@ -23,11 +23,11 @@ func CreateConfig(version, name string, dotnet bool) error {
         return err
     }
 
-    return os.WriteFile("godot.json", data, 0644)
+    return os.WriteFile("gdproj.json", data, 0644)
 }
 
 func LoadConfig() (*GodotConfig, error) {
-    data, err := os.ReadFile("godot.json")
+    data, err := os.ReadFile("gdproj.json")
     if err != nil {
         return nil, err
     }
