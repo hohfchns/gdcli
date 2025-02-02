@@ -3,14 +3,13 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'  # Triggers on tags like v0.1.0
+      - 'v*.*.*'  # Triggers on tags like v1.2.3
   workflow_dispatch:
     inputs:
       tag:
         description: 'Tag to release'
         required: true
         default: 'v0.1.0'
-      
 
 permissions:
   contents: write  # Allows the token to push changes, create releases, etc.
@@ -28,11 +27,11 @@ jobs:
         with:
           go-version: '1.23.5'
 
-      # Build steps, etc.
+      # Build steps
       - name: Build Linux Binary
         run: |
           GOOS=linux GOARCH=amd64 go build -ldflags "-X main.version=${{ github.ref_name }} -X main.commit=${{ github.sha }} -X main.buildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gdcli-linux .
-    
+
       - name: Build Windows Binary
         run: |
           GOOS=windows GOARCH=amd64 go build -ldflags "-X main.version=${{ github.ref_name }} -X main.commit=${{ github.sha }} -X main.buildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gdcli.exe .
@@ -70,3 +69,17 @@ jobs:
           asset_path: ./gdcli.exe
           asset_name: gdcli.exe
           asset_content_type: application/octet-stream
+
+      - name: Dispatch event to gdcli-choco
+        if: ${{ success() }}
+        env:
+          GH_ACTIONS_PAT: ${{ secrets.GH_ACTIONS_PAT }}
+        run: |
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          echo "Triggering update in gdcli-choco for version $VERSION"
+          
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_ACTIONS_PAT" \
+            --data "{\"event_type\": \"gdcli_release\", \"client_payload\": {\"version\": \"$VERSION\"}}" \
+            https://api.github.com/repos/IgorBayerl/gdcli-choco/dispatches
