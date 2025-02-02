@@ -30,8 +30,15 @@ jobs:
       # Build the Windows CLI Binary
       - name: Build Windows Binary
         run: |
-          go build -ldflags "-X main.version=${{ github.ref_name }} -X main.commit=${{ github.sha }} -X main.buildTime=$(Get-Date -UFormat '%Y-%m-%d_%H:%M:%S')" -o gdcli.exe .
+          mkdir -p bin
+          go build -ldflags "-X main.version=${{ github.ref_name }} -X main.commit=${{ github.sha }} -X main.buildTime=$(Get-Date -UFormat '%Y-%m-%d_%H:%M:%S')" -o bin/gdcli.exe .
 
+      - name: Verify Windows Binary Exists
+        run: |
+          if (-Not (Test-Path "bin/gdcli.exe")) { exit 1 }
+          echo "gdcli.exe successfully built."
+
+      # ✅ Install Inno Setup before building the installer
       - name: Install Inno Setup
         run: choco install -y innosetup
 
@@ -58,7 +65,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: ./gdcli.exe
+          asset_path: ./bin/gdcli.exe
           asset_name: gdcli.exe
           asset_content_type: application/octet-stream
 
