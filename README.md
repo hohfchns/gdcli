@@ -1,6 +1,8 @@
 # gdcli (Godot Project CLI)
 
-Cli tool similar to npm but for Godot projects, written in Go.
+Cli tool similar to npm but for Godot projects
+
+![Icon](<icon.png>)
 
 ## Overview
 

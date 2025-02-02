@@ -31,11 +31,11 @@ jobs:
       # Build steps, etc.
       - name: Build Linux Binary
         run: |
-          GOOS=linux GOARCH=amd64 go build -o gdcli-linux .
-
+          GOOS=linux GOARCH=amd64 go build -ldflags "-X main.version=${{ github.ref_name }} -X main.commit=${{ github.sha }} -X main.buildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gdcli-linux .
+    
       - name: Build Windows Binary
         run: |
-          GOOS=windows GOARCH=amd64 go build -o gdcli.exe .
+          GOOS=windows GOARCH=amd64 go build -ldflags "-X main.version=${{ github.ref_name }} -X main.commit=${{ github.sha }} -X main.buildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gdcli.exe .
 
       - name: Create GitHub Release
         id: create_release
