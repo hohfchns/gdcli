@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # Use Windows for building the installer
 
     steps:
       - name: Checkout code
@@ -27,14 +27,16 @@ jobs:
         with:
           go-version: '1.23.5'
 
-      # Build steps
-      - name: Build Linux Binary
-        run: |
-          GOOS=linux GOARCH=amd64 go build -ldflags "-X main.version=${{ github.ref_name }} -X main.commit=${{ github.sha }} -X main.buildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gdcli-linux .
-
+      # Build the Windows CLI Binary
       - name: Build Windows Binary
         run: |
-          GOOS=windows GOARCH=amd64 go build -ldflags "-X main.version=${{ github.ref_name }} -X main.commit=${{ github.sha }} -X main.buildTime=$(date -u '+%Y-%m-%d_%H:%M:%S')" -o gdcli.exe .
+          go build -ldflags "-X main.version=${{ github.ref_name }} -X main.commit=${{ github.sha }} -X main.buildTime=$(Get-Date -UFormat '%Y-%m-%d_%H:%M:%S')" -o gdcli.exe .
+
+      - name: Install Inno Setup
+        run: choco install -y innosetup
+
+      - name: Build Windows Installer
+        run: iscc setup.iss
 
       - name: Create GitHub Release
         id: create_release
@@ -50,16 +52,6 @@ jobs:
       - name: Store upload URL
         run: echo "UPLOAD_URL=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
 
-      - name: Upload Linux Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: ./gdcli-linux
-          asset_name: gdcli-linux
-          asset_content_type: application/octet-stream
-
       - name: Upload Windows Binary
         uses: actions/upload-release-asset@v1
         env:
@@ -68,4 +60,15 @@ jobs:
           upload_url: ${{ env.UPLOAD_URL }}
           asset_path: ./gdcli.exe
           asset_name: gdcli.exe
+          asset_content_type: application/octet-stream
+
+      # Upload Windows Installer
+      - name: Upload Windows Installer
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ env.UPLOAD_URL }}
+          asset_path: ./gdcliSetup.exe
+          asset_name: gdcliSetup.exe
           asset_content_type: application/octet-stream
