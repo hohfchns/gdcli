@@ -1,0 +1,16 @@
+name: Notify gdcli-choco Repository
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify-choco-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Repository Dispatch to gdcli-choco
+        run: |
+          curl -X POST -H "Accept: application/vnd.github.everest-preview+json" \
+          -H "Authorization: token ${{ secrets.GH_ACTIONS_PAT }}" \
+          --data '{"event_type": "gdcli_release"}' \
+          https://api.github.com/repos/IgorBayerl/gdcli-choco/dispatches
