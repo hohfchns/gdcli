@@ -2,15 +2,18 @@ name: Notify gdcli-choco Repository
 
 on:
   release:
-    types: [published]
+    types: [published]  # Triggers on every new release
 
 jobs:
   notify-choco-repo:
     runs-on: ubuntu-latest
     steps:
       - name: Send Repository Dispatch to gdcli-choco
+        env:
+          GH_ACTIONS_PAT: ${{ secrets.GH_ACTIONS_PAT }}
         run: |
-          curl -X POST -H "Accept: application/vnd.github.everest-preview+json" \
-          -H "Authorization: token ${{ secrets.GH_ACTIONS_PAT }}" \
-          --data '{"event_type": "gdcli_release"}' \
+          curl -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer $GH_ACTIONS_PAT" \
+          --data "$(jq -n --arg event_type "gdcli_release" '{event_type: $event_type}')" \
           https://api.github.com/repos/IgorBayerl/gdcli-choco/dispatches
