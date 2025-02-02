@@ -45,37 +45,17 @@ jobs:
       - name: Build Windows Installer
         run: iscc setup.iss
 
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
+      # Create GitHub Release and upload assets using softprops/action-gh-release
+      - name: Create Release and Upload Assets
+        id: release
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          name: Release ${{ github.ref }}
           draft: false
           prerelease: false
-
-      - name: Store upload URL
-        run: echo "UPLOAD_URL=${{ steps.create_release.outputs.upload_url }}" >> $env:GITHUB_ENV
-
-      - name: Upload Windows Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: ./bin/gdcli.exe
-          asset_name: gdcli.exe
-          asset_content_type: application/octet-stream
-
-      # Upload Windows Installer
-      - name: Upload Windows Installer
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: ./gdcliSetup.exe
-          asset_name: gdcliSetup.exe
-          asset_content_type: application/octet-stream
+          files: |
+            bin/gdcli.exe
+            gdcliSetup.exe
