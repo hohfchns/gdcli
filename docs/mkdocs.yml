@@ -1,0 +1,16 @@
+site_name: gdcli Documentation
+theme:
+  name: material
+  logo: assets/icon.png
+  favicon: assets/icon.ico
+nav:
+  - Home: index.md
+  - GettingStarted: getting-started.md
+  - Commands:
+      - Init: commands/init.md
+      - Install: commands/install.md
+      - Open: commands/open.md
+      - Clean: commands/clean.md
+      - Version: commands/version.md
+  - Contributing: contributing.md
+  - License: license.md
