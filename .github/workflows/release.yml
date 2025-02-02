@@ -69,17 +69,3 @@ jobs:
           asset_path: ./gdcli.exe
           asset_name: gdcli.exe
           asset_content_type: application/octet-stream
-
-      - name: Dispatch event to gdcli-choco
-        if: ${{ success() }}
-        env:
-          GH_ACTIONS_PAT: ${{ secrets.GH_ACTIONS_PAT }}
-        run: |
-          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
-          echo "Triggering update in gdcli-choco for version $VERSION"
-          
-          curl -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer $GH_ACTIONS_PAT" \
-            --data "{\"event_type\": \"gdcli_release\", \"client_payload\": {\"version\": \"$VERSION\"}}" \
-            https://api.github.com/repos/IgorBayerl/gdcli-choco/dispatches
