@@ -38,7 +38,7 @@ jobs:
           if (-Not (Test-Path "bin/gdcli.exe")) { exit 1 }
           echo "gdcli.exe successfully built."
 
-      # ✅ Install Inno Setup before building the installer
+      # Install Inno Setup before building the installer
       - name: Install Inno Setup
         run: choco install -y innosetup
 
@@ -57,7 +57,7 @@ jobs:
           prerelease: false
 
       - name: Store upload URL
-        run: echo "UPLOAD_URL=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_ENV
+        run: echo "UPLOAD_URL=${{ steps.create_release.outputs.upload_url }}" >> $env:GITHUB_ENV
 
       - name: Upload Windows Binary
         uses: actions/upload-release-asset@v1
