@@ -27,6 +27,27 @@ For people experimenting with multiple Godot projects, managing Godot versions a
 
 An installer will be provided in future updates to automate the PATH addition.
 
+## How to Create a New Release
+
+To create a new release, follow these steps:
+
+1. **Create a new version tag** in the repository:
+   ```sh
+   git tag -a vX.Y.Z -m "Release vX.Y.Z"
+   git push origin vX.Y.Z
+   ```
+   Replace `X.Y.Z` with the new version number.
+
+2. **Trigger a release workflow manually** *(if needed)* from GitHub Actions:
+   - Go to the [Actions tab](https://github.com/IgorBayerl/gdcli/actions).
+   - Select **Release Workflow**.
+   - Click **Run Workflow** and provide a tag version (e.g., `vX.Y.Z`).
+
+3. **GitHub Actions will automatically:**
+   - Build the latest binaries for Linux and Windows.
+   - Create a GitHub release with the generated binaries.
+   - Trigger the `gdcli-choco` repository to update the Chocolatey package.
+
 ## TODO
 
 - [ ] Add build script
@@ -41,7 +62,6 @@ An installer will be provided in future updates to automate the PATH addition.
 - [ ] Add support for custom Godot versions
   - [ ] example: custom Godot Steam version
 
-
 ## How to Contribute
 
 We aim to turn `gdcli` into a useful tool for Godot developers. Contributions are welcome!
@@ -50,4 +70,3 @@ We aim to turn `gdcli` into a useful tool for Godot developers. Contributions ar
 2. Create a new branch for your feature or bugfix.
 3. Commit your changes.
 4. Open a pull request with a detailed description of your changes.
-
