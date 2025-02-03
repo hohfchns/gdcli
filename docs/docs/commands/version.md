@@ -8,6 +8,7 @@ Displays the version information of gdcli, including the build version, commit h
 ```bash
 gdcli version [--full]
 ```
+![command help](/assets/gdcli_help.gif)
 
 **Parameters:**
 

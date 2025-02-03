@@ -1,14 +1,15 @@
 
 **Description:**
-
 Installs a specified Godot engine version or uses the version defined in the `gdproj.json` configuration file. This is particularly useful when setting up a project cloned from a repository.
+
+So lets suppose you just cloned a project from a repository and you want to use the Godot version specified in the `gdproj.json` configuration file.
 
 **Usage:**
 
 ```bash
 gdcli install [version]
 ```
-
+![command install](/assets/gdcli_install.gif)
 **Parameters:**
 
 - `version` (optional): The specific Godot version to install (e.g., `4.3.0-mono`). If omitted, the version specified in `gdproj.json` will be used.

@@ -4,6 +4,8 @@
 
 gdcli is a command-line interface tool designed to streamline the creation and management of Godot projects. Inspired by npm, it offers functionalities to initialize projects, manage Godot versions, and more.
 
+![command init](/assets/gdcli_init.gif)
+
 ## Features
 
 - **Initialize Projects**: Set up a new Godot project with a ready-to-use folder structure.
