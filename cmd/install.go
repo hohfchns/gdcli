@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+    "runtime"
 
 	"github.com/IgorBayerl/gdcli/internal/config"
 	"github.com/IgorBayerl/gdcli/internal/core"
@@ -34,8 +35,11 @@ func runInstall(cmd *cobra.Command, args []string) {
         if err != nil {
             fmt.Printf("❌ Version error: %v\n", err)
             fmt.Println("💡 Available versions:")
+            currentOS := runtime.GOOS
             for _, v := range core.VersionManifest {
-                fmt.Printf("  - %s\n", v.DisplayName)
+                if v.OS == currentOS {
+                    fmt.Printf("  - %s\n", v.DisplayName)
+                }
             }
             return
         }
@@ -51,8 +55,9 @@ func runInstall(cmd *cobra.Command, args []string) {
 
         // Find config version in manifest
         found := false
+        currentOS := runtime.GOOS
         for _, v := range core.VersionManifest {
-            if v.Version == cfg.EngineVersion && v.DotNet == cfg.IsDotNet {
+            if v.Version == cfg.EngineVersion && v.DotNet == cfg.IsDotNet && v.OS == currentOS {
                 version = v
                 found = true
                 break
