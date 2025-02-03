@@ -8,7 +8,7 @@ Initializes a new Godot project by setting up the necessary folder structure and
 gdcli init
 ```
 
-![command init](/assets/gdcli_init.gif)
+![command init](../assets/gdcli_init.gif)
 
 **Behavior:**
 
