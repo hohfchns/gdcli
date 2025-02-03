@@ -43,11 +43,6 @@ To create a new release, follow these steps:
    - Select **Release Workflow**.
    - Click **Run Workflow** and provide a tag version (e.g., `vX.Y.Z`).
 
-3. **GitHub Actions will automatically:**
-   - Build the latest binaries for Linux and Windows.
-   - Create a GitHub release with the generated binaries.
-   - Trigger the `gdcli-choco` repository to update the Chocolatey package.
-
 ## TODO
 
 - [ ] Add build script

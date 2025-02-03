@@ -42,13 +42,14 @@ func runOpen(cobraCmd *cobra.Command, args []string) {
         }
     }
 
-    // Launch editor
     godotCmd := exec.Command(godotPath, "--path", ".", "--editor")
-    godotCmd.Stdout = os.Stdout
-    godotCmd.Stderr = os.Stderr
-    
-    fmt.Println("Launching Godot editor...")
-    if err := godotCmd.Run(); err != nil {
+    godotCmd.Stdout = nil
+    godotCmd.Stderr = nil
+    godotCmd.Stdin = nil
+
+    if err := godotCmd.Start(); err != nil {
         fmt.Printf("Error launching Godot: %v\n", err)
+    } else {
+        fmt.Println("Godot editor launched successfully and detached from terminal.")
     }
 }
