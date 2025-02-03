@@ -6,36 +6,36 @@ import (
 )
 
 type GodotConfig struct {
-    EngineVersion string `json:"engine_version"`
-    ProjectName   string `json:"project_name"`
-    IsDotNet      bool   `json:"is_dotnet"`
+	EngineVersion string `json:"engine_version"`
+	ProjectName   string `json:"project_name"`
+	IsDotNet      bool   `json:"is_dotnet"`
 }
 
 func CreateConfig(version, name string, dotnet bool) error {
-    cfg := GodotConfig{
-        EngineVersion: version,
-        ProjectName:   name,
-        IsDotNet:      dotnet,
-    }
+	cfg := GodotConfig{
+		EngineVersion: version,
+		ProjectName:   name,
+		IsDotNet:      dotnet,
+	}
 
-    data, err := json.MarshalIndent(cfg, "", "  ")
-    if err != nil {
-        return err
-    }
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
 
-    return os.WriteFile("gdproj.json", data, 0644)
+	return os.WriteFile("gdproj.json", data, 0644)
 }
 
 func LoadConfig() (*GodotConfig, error) {
-    data, err := os.ReadFile("gdproj.json")
-    if err != nil {
-        return nil, err
-    }
+	data, err := os.ReadFile("gdproj.json")
+	if err != nil {
+		return nil, err
+	}
 
-    var cfg GodotConfig
-    if err := json.Unmarshal(data, &cfg); err != nil {
-        return nil, err
-    }
-    
-    return &cfg, nil
+	var cfg GodotConfig
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
 }

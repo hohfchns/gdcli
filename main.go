@@ -6,9 +6,9 @@ import (
 
 // Set via ldflags during build
 var (
-	version   = "dev"    // Should match the git tag
-	commit    = "none"   // Git commit hash
-	buildTime = "unknown"// Build timestamp
+	version   = "dev"     // Should match the git tag
+	commit    = "none"    // Git commit hash
+	buildTime = "unknown" // Build timestamp
 )
 
 func main() {

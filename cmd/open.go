@@ -22,34 +22,34 @@ func openCmd() *cobra.Command {
 }
 
 func runOpen(cobraCmd *cobra.Command, args []string) {
-    godotPath := filepath.Join("dependencies", "godot.exe")
-    
-    if _, err := os.Stat(godotPath); os.IsNotExist(err) {
-        fmt.Printf("Godot executable not found at %s\n", godotPath)
-        fmt.Println("Run 'gdcli install' to install the required version")
-        return
-    }
+	godotPath := filepath.Join("dependencies", "godot.exe")
 
-    // Initialize project if not exists
-    if _, err := os.Stat("project.godot"); os.IsNotExist(err) {
-        fmt.Println("Initializing new Godot project...")
-        initCmd := exec.Command(godotPath, "--path", ".", "--editor")
-        initCmd.Stdout = os.Stdout
-        initCmd.Stderr = os.Stderr
-        if err := initCmd.Run(); err != nil {
-            fmt.Printf("Failed to initialize project: %v\n", err)
-            return
-        }
-    }
+	if _, err := os.Stat(godotPath); os.IsNotExist(err) {
+		fmt.Printf("Godot executable not found at %s\n", godotPath)
+		fmt.Println("Run 'gdcli install' to install the required version")
+		return
+	}
 
-    godotCmd := exec.Command(godotPath, "--path", ".", "--editor")
-    godotCmd.Stdout = nil
-    godotCmd.Stderr = nil
-    godotCmd.Stdin = nil
+	// Initialize project if not exists
+	if _, err := os.Stat("project.godot"); os.IsNotExist(err) {
+		fmt.Println("Initializing new Godot project...")
+		initCmd := exec.Command(godotPath, "--path", ".", "--editor")
+		initCmd.Stdout = os.Stdout
+		initCmd.Stderr = os.Stderr
+		if err := initCmd.Run(); err != nil {
+			fmt.Printf("Failed to initialize project: %v\n", err)
+			return
+		}
+	}
 
-    if err := godotCmd.Start(); err != nil {
-        fmt.Printf("Error launching Godot: %v\n", err)
-    } else {
-        fmt.Println("Godot editor launched successfully and detached from terminal.")
-    }
+	godotCmd := exec.Command(godotPath, "--path", ".", "--editor")
+	godotCmd.Stdout = nil
+	godotCmd.Stderr = nil
+	godotCmd.Stdin = nil
+
+	if err := godotCmd.Start(); err != nil {
+		fmt.Printf("Error launching Godot: %v\n", err)
+	} else {
+		fmt.Println("Godot editor launched successfully and detached from terminal.")
+	}
 }

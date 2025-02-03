@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"runtime"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/IgorBayerl/gdcli/internal/config"
@@ -18,99 +18,99 @@ import (
 )
 
 func init() {
-    rootCmd.AddCommand(initCmd())
+	rootCmd.AddCommand(initCmd())
 }
 
 func initCmd() *cobra.Command {
-    return &cobra.Command{
-        Use:   "init",
-        Short: "Initialize new Godot project",
-        Run:   runInit,
-    }
+	return &cobra.Command{
+		Use:   "init",
+		Short: "Initialize new Godot project",
+		Run:   runInit,
+	}
 }
 
 func runInit(cmd *cobra.Command, args []string) {
-    // Check if config already exists
-    if _, err := os.Stat("gdproj.json"); err == nil {
-        fmt.Println("Project already initialized. Run 'gdcli install' to install dependencies.")
-        return
-    } else if !os.IsNotExist(err) {
-        fmt.Printf("Error checking for existing config: %v\n", err)
-        return
-    }
+	// Check if config already exists
+	if _, err := os.Stat("gdproj.json"); err == nil {
+		fmt.Println("Project already initialized. Run 'gdcli install' to install dependencies.")
+		return
+	} else if !os.IsNotExist(err) {
+		fmt.Printf("Error checking for existing config: %v\n", err)
+		return
+	}
 
-    // Get current directory name
-    wd, err := os.Getwd()
-    if err != nil {
-        fmt.Printf("Error getting current directory: %v\n", err)
-        return
-    }
-    defaultProjectName := filepath.Base(wd)
+	// Get current directory name
+	wd, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("Error getting current directory: %v\n", err)
+		return
+	}
+	defaultProjectName := filepath.Base(wd)
 
-    var versionOptions []string
-    currentOS := runtime.GOOS
-    for _, v := range core.VersionManifest {
-        if v.OS == currentOS {
-            versionOptions = append(versionOptions, v.DisplayName)
-        }
-    }
+	var versionOptions []string
+	currentOS := runtime.GOOS
+	for _, v := range core.VersionManifest {
+		if v.OS == currentOS {
+			versionOptions = append(versionOptions, v.DisplayName)
+		}
+	}
 
-    qs := []*survey.Question{
-        {
-            Name: "projectName",
-            Prompt: &survey.Input{
-                Message: "Project name:",
-                Default: defaultProjectName,
-            },
-        },
-        {
-            Name: "version",
-            Prompt: &survey.Select{
-                Message: "Select Godot version:",
-                Options: versionOptions,
-                Default: versionOptions[0],
-            },
-        },
-    }
+	qs := []*survey.Question{
+		{
+			Name: "projectName",
+			Prompt: &survey.Input{
+				Message: "Project name:",
+				Default: defaultProjectName,
+			},
+		},
+		{
+			Name: "version",
+			Prompt: &survey.Select{
+				Message: "Select Godot version:",
+				Options: versionOptions,
+				Default: versionOptions[0],
+			},
+		},
+	}
 
-    answers := struct {
-        ProjectName string
-        Version     string
-    }{}
+	answers := struct {
+		ProjectName string
+		Version     string
+	}{}
 
-    if err := survey.Ask(qs, &answers); err != nil {
-        fmt.Printf("Error during survey: %v\n", err)
-        return
-    }
+	if err := survey.Ask(qs, &answers); err != nil {
+		fmt.Printf("Error during survey: %v\n", err)
+		return
+	}
 
-    selected, err := core.GetVersionByIdentifier(answers.Version)
-    if err != nil {
-        fmt.Printf("Version selection error: %v\n", err)
-        return
-    }
+	selected, err := core.GetVersionByIdentifier(answers.Version)
+	if err != nil {
+		fmt.Printf("Version selection error: %v\n", err)
+		return
+	}
 
-    if err := config.CreateConfig(selected.Version, answers.ProjectName, selected.DotNet); err != nil {
-        fmt.Printf("Error creating config: %v\n", err)
-        return
-    }
+	if err := config.CreateConfig(selected.Version, answers.ProjectName, selected.DotNet); err != nil {
+		fmt.Printf("Error creating config: %v\n", err)
+		return
+	}
 
-    fmt.Printf("Installing Godot %s...\n", selected.DisplayName)
-    if err := core.InstallGodotVersion(selected); err != nil {
-        fmt.Printf("Installation failed: %v\n", err)
-        return
-    }
+	fmt.Printf("Installing Godot %s...\n", selected.DisplayName)
+	if err := core.InstallGodotVersion(selected); err != nil {
+		fmt.Printf("Installation failed: %v\n", err)
+		return
+	}
 
-    if err := createGodotProjectFile(answers.ProjectName); err != nil {
-        fmt.Printf("Error creating project file: %v\n", err)
-        return
-    }
+	if err := createGodotProjectFile(answers.ProjectName); err != nil {
+		fmt.Printf("Error creating project file: %v\n", err)
+		return
+	}
 
-    updateGitignore()
-    runOpen(cmd, args)
+	updateGitignore()
+	runOpen(cmd, args)
 }
 
 func createGodotProjectFile(projectName string) error {
-    config := fmt.Sprintf(`[application]
+	config := fmt.Sprintf(`[application]
 
 config/name="%s"
 run/main_scene=""
@@ -120,7 +120,7 @@ config/icon=""
 
 environment/default_environment=""
 `, projectName)
-    return os.WriteFile("project.godot", []byte(config), 0644)
+	return os.WriteFile("project.godot", []byte(config), 0644)
 }
 
 func updateGitignore() {

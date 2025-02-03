@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
-	"runtime"
 )
 
 type GodotVersion struct {
@@ -55,7 +55,7 @@ var VersionManifest = []GodotVersion{
 func GetVersionByIdentifier(identifier string) (GodotVersion, error) {
 	var matches []GodotVersion
 
-  currentOS := runtime.GOOS
+	currentOS := runtime.GOOS
 	for _, v := range VersionManifest {
 		if v.OS == currentOS && strings.EqualFold(v.DisplayName, identifier) || v.Version == identifier {
 			return v, nil
@@ -100,7 +100,7 @@ func InstallGodotVersion(version GodotVersion) error {
 	}
 
 	tempDir := filepath.Join("dependencies", "temp_extract")
-	defer os.RemoveAll(tempDir) 
+	defer os.RemoveAll(tempDir)
 
 	fmt.Printf("Extracting %s...\n", zipName)
 	if err := extractZip(zipPath, tempDir); err != nil {
@@ -133,11 +133,11 @@ func getGodotExe(inDir string) (string, string, error) {
 	var consoleExeName string
 
 	entries, err := os.ReadDir(inDir)
-  if err != nil {
-    return "", "", err
-  }
+	if err != nil {
+		return "", "", err
+	}
 
-  for _, info := range entries {
+	for _, info := range entries {
 		switch runtime.GOOS {
 		case "linux":
 			// TODO handle other architectures?
@@ -154,9 +154,9 @@ func getGodotExe(inDir string) (string, string, error) {
 				exeName = name
 			}
 		}
-  }
+	}
 
-  return exeName, consoleExeName, err
+	return exeName, consoleExeName, err
 }
 
 func findExePath(searchDir string) (string, string, error) {
@@ -293,8 +293,6 @@ func renameExecutables(targetDir string) error {
 	return nil
 }
 
-
-
 func downloadFile(path string, url string) error {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -360,20 +358,20 @@ func extractZip(src, dest string) error {
 
 // copyFile copies a single file from src to dst.
 func copyFile(src, dst string) error {
-    in, err := os.Open(src)
-    if err != nil {
-        return err
-    }
-    defer in.Close()
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
 
-    out, err := os.Create(dst)
-    if err != nil {
-        return err
-    }
-    defer out.Close()
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
 
-    if _, err := io.Copy(out, in); err != nil {
-        return err
-    }
-    return out.Sync()
+	if _, err := io.Copy(out, in); err != nil {
+		return err
+	}
+	return out.Sync()
 }
