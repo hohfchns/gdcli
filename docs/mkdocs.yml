@@ -1,8 +1,32 @@
 site_name: gdcli Documentation
 theme:
-  name: material
   logo: assets/icon.png
   favicon: assets/icon.ico
+  name: material
+  features:
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline 
+        name: Switch to dark mode
+      primary: blue
+      accent: purple 
+    - scheme: slate 
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode    
+      primary: blue
+      accent: lime
+
+plugins:
+  - search
+
 nav:
   - Home: index.md
   - GettingStarted: getting-started.md
