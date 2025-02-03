@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"runtime"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/IgorBayerl/gdcli/internal/config"
@@ -47,8 +48,11 @@ func runInit(cmd *cobra.Command, args []string) {
     defaultProjectName := filepath.Base(wd)
 
     var versionOptions []string
+    currentOS := runtime.GOOS
     for _, v := range core.VersionManifest {
-        versionOptions = append(versionOptions, v.DisplayName)
+        if v.OS == currentOS {
+            versionOptions = append(versionOptions, v.DisplayName)
+        }
     }
 
     qs := []*survey.Question{

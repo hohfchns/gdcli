@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"runtime"
 )
 
 type GodotVersion struct {
@@ -16,6 +17,7 @@ type GodotVersion struct {
 	Version     string // Base version number
 	DotNet      bool   // Whether this is a Mono/.NET version
 	URL         string // Download URL
+	OS          string // Operating System (Architecture assumed as x64)
 }
 
 var VersionManifest = []GodotVersion{
@@ -24,12 +26,28 @@ var VersionManifest = []GodotVersion{
 		Version:     "4.3.0",
 		DotNet:      false,
 		URL:         "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_win64.exe.zip",
+		OS:          "windows",
 	},
 	{
 		DisplayName: "4.3.0 (Mono)",
 		Version:     "4.3.0",
 		DotNet:      true,
 		URL:         "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_mono_win64.zip",
+		OS:          "windows",
+	},
+	{
+		DisplayName: "4.3.0 (Standard)",
+		Version:     "4.3.0",
+		DotNet:      false,
+		URL:         "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip",
+		OS:          "linux",
+	},
+	{
+		DisplayName: "4.3.0 (Mono)",
+		Version:     "4.3.0",
+		DotNet:      true,
+		URL:         "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_mono_linux_x86_64.zip",
+		OS:          "linux",
 	},
 	// Add more versions as needed
 }
@@ -37,14 +55,15 @@ var VersionManifest = []GodotVersion{
 func GetVersionByIdentifier(identifier string) (GodotVersion, error) {
 	var matches []GodotVersion
 
+  currentOS := runtime.GOOS
 	for _, v := range VersionManifest {
-		if strings.EqualFold(v.DisplayName, identifier) || v.Version == identifier {
+		if v.OS == currentOS && strings.EqualFold(v.DisplayName, identifier) || v.Version == identifier {
 			return v, nil
 		}
 	}
 
 	for _, v := range VersionManifest {
-		if strings.Contains(strings.ToLower(v.DisplayName), strings.ToLower(identifier)) {
+		if v.OS == currentOS && strings.Contains(strings.ToLower(v.DisplayName), strings.ToLower(identifier)) {
 			matches = append(matches, v)
 		}
 	}
@@ -88,7 +107,7 @@ func InstallGodotVersion(version GodotVersion) error {
 		return err
 	}
 
-	exeDir, err := findExePath(tempDir)
+	exeDir, _, err := findExePath(tempDir)
 	if err != nil {
 		return fmt.Errorf("error locating executables: %v", err)
 	}
@@ -109,31 +128,70 @@ func InstallGodotVersion(version GodotVersion) error {
 	return nil
 }
 
-func findExePath(searchDir string) (string, error) {
-	var exePath string
+func getGodotExe(inDir string) (string, string, error) {
+	var exeName string
+	var consoleExeName string
+
+	entries, err := os.ReadDir(inDir)
+  if err != nil {
+    return "", "", err
+  }
+
+  for _, info := range entries {
+		switch runtime.GOOS {
+		case "linux":
+			// TODO handle other architectures?
+			if strings.HasPrefix(info.Name(), "Godot_") && strings.EqualFold(filepath.Ext(info.Name()), ".x86_64") {
+				exeName = info.Name()
+				break
+			}
+		case "windows":
+			name := info.Name()
+			lowerName := strings.ToLower(name)
+			if strings.Contains(lowerName, "_console") && strings.HasSuffix(lowerName, ".exe") {
+				consoleExeName = name
+			} else if strings.HasSuffix(lowerName, ".exe") && !strings.Contains(lowerName, "_console") {
+				exeName = name
+			}
+		}
+  }
+
+  return exeName, consoleExeName, err
+}
+
+func findExePath(searchDir string) (string, string, error) {
+	var exeDir string
+	var exeName string
 
 	err := filepath.Walk(searchDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if info.IsDir() {
+		if !info.IsDir() {
 			return nil
 		}
 
-		if strings.EqualFold(filepath.Ext(info.Name()), ".exe") {
-			exePath = filepath.Dir(path)
-			return filepath.SkipDir 
+		var getGodotExeErr error
+		exeName, _, getGodotExeErr = getGodotExe(path)
+		exeDir = path
+
+		if getGodotExeErr != nil {
+			return getGodotExeErr
+		}
+
+		if exeName != "" {
+			return nil
 		}
 
 		return nil
 	})
 
-	if exePath == "" {
-		return "", fmt.Errorf("no executables found in %s", searchDir)
+	if exeDir == "" || exeName == "" {
+		return "", "", fmt.Errorf("no executables found in %s", searchDir)
 	}
 
-	return exePath, err
+	return exeDir, exeName, err
 }
 
 func moveFilesFromSubdir(src, dest string) error {
@@ -181,27 +239,19 @@ func renameExecutables(targetDir string) error {
 	// Retry mechanism in case of delays in file availability.
 	retryCount := 3
 	for i := 0; i < retryCount; i++ {
-		files, err := os.ReadDir(targetDir)
+		// Search for the Godot executables
+		var err error
+		mainExe, consoleExe, err = getGodotExe(targetDir)
+
 		if err != nil {
 			return fmt.Errorf("failed to read directory: %v", err)
-		}
-
-		// Reset variables for each retry.
-		mainExe, consoleExe = "", ""
-		for _, f := range files {
-			name := f.Name()
-			lowerName := strings.ToLower(name)
-			if strings.Contains(lowerName, "_console") && strings.HasSuffix(lowerName, ".exe") {
-				consoleExe = name
-			} else if strings.HasSuffix(lowerName, ".exe") && !strings.Contains(lowerName, "_console") {
-				mainExe = name
-			}
 		}
 
 		// If at least the main exe is found, break out of the loop.
 		if mainExe != "" {
 			break
 		}
+
 		fmt.Println("Retrying file detection...")
 		time.Sleep(1 * time.Second)
 	}
@@ -216,6 +266,12 @@ func renameExecutables(targetDir string) error {
 			fmt.Printf("Warning: failed to remove original main executable %s: %v\n", mainExe, err)
 		}
 		fmt.Printf("Copied %s -> godot.exe\n", mainExe)
+
+		// Probably the same with "darwin" AKA MacOS
+		if runtime.GOOS == "linux" {
+			fmt.Printf("Attempting to set executable permission...")
+			os.Chmod(newMainPath, os.FileMode(0755))
+		}
 	} else {
 		return fmt.Errorf("main executable not found after extraction")
 	}

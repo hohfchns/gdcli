@@ -50,7 +50,7 @@ To create a new release, follow these steps:
 - [ ] Add support for global extensions, allowing extensions to be installed globally for use in every project
 - [ ] Support more versions and variants, hopefully dynamic versions
   - [ ] For now, just Godot 4.3 and 4.3 Mono
-  - [ ] Support only for Windows
+  - [x] Support for Linux
   - [ ] In the future, the objective is to support all versions dynamically
 - [ ] Support templates for starting projects
   - [ ] example: menu, platformer, 2d, 3d, etc.
