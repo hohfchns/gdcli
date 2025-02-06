@@ -159,40 +159,42 @@ func getGodotExe(inDir string) (string, string, error) {
 	return exeName, consoleExeName, err
 }
 
+var errFound = fmt.Errorf("found")
+
 func findExePath(searchDir string) (string, string, error) {
-	var exeDir string
-	var exeName string
+    var foundExeDir, foundExe string
 
-	err := filepath.Walk(searchDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
+    err := filepath.Walk(searchDir, func(path string, info os.FileInfo, err error) error {
+        if err != nil {
+            return err
+        }
+        if !info.IsDir() {
+            return nil
+        }
 
-		if !info.IsDir() {
-			return nil
-		}
+        exe, _, err := getGodotExe(path)
+        if err != nil {
+            return err
+        }
+        if exe != "" {
+            foundExeDir = path
+            foundExe = exe
+            // Return a sentinel error to stop the walk.
+            return errFound
+        }
+        return nil
+    })
 
-		var getGodotExeErr error
-		exeName, _, getGodotExeErr = getGodotExe(path)
-		exeDir = path
-
-		if getGodotExeErr != nil {
-			return getGodotExeErr
-		}
-
-		if exeName != "" {
-			return nil
-		}
-
-		return nil
-	})
-
-	if exeDir == "" || exeName == "" {
-		return "", "", fmt.Errorf("no executables found in %s", searchDir)
-	}
-
-	return exeDir, exeName, err
+    // If we broke out because we found the exe, ignore the sentinel error.
+    if err != nil && err != errFound {
+        return "", "", err
+    }
+    if foundExeDir == "" || foundExe == "" {
+        return "", "", fmt.Errorf("no executables found in %s", searchDir)
+    }
+    return foundExeDir, foundExe, nil
 }
+
 
 func moveFilesFromSubdir(src, dest string) error {
 	entries, err := os.ReadDir(src)

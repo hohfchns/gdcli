@@ -27,6 +27,16 @@ For people experimenting with multiple Godot projects, managing Godot versions a
 
 An installer will be provided in future updates to automate the PATH addition.
 
+## Build from Source
+
+To build the `gdcli` tool from source, run the following command:
+
+```sh
+go build -o bin/gdcli.exe main.go
+```
+
+This will compile the code and generate the `gdcli.exe` executable in the `bin` directory.
+
 ## How to Create a New Release
 
 To create a new release, follow these steps:
