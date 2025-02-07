@@ -100,9 +100,15 @@ func runInit(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if err := createGodotProjectFile(answers.ProjectName); err != nil {
-		fmt.Printf("Error creating project file: %v\n", err)
-		return
+	// Check that `project.godot` does not exist, so as to not override on existing project
+	if _, err := os.Stat("project.godot"); os.IsNotExist(err) {
+		fmt.Printf("Did not find a 'project.godot' file, creating new Godot project...\n")
+		if err := createGodotProjectFile(answers.ProjectName); err != nil {
+			fmt.Printf("Error creating project file: %v\n", err)
+			return
+		}
+	} else {
+		fmt.Printf("Found existing 'project.godot' file.\n")
 	}
 
 	updateGitignore()
