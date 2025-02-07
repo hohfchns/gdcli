@@ -109,6 +109,23 @@ func runInit(cmd *cobra.Command, args []string) {
 		}
 	} else {
 		fmt.Printf("Found existing 'project.godot' file.\n")
+		prompt := &survey.Confirm {
+			Message: "Override Existing project.godot?",
+			Default: false,
+		}
+
+		var overrideProject bool;
+		if err := survey.AskOne(prompt, &overrideProject); err != nil {
+			fmt.Printf("Error during survey: %v\n", err)
+			return
+		}
+
+		if overrideProject {
+			if err := createGodotProjectFile(answers.ProjectName); err != nil {
+				fmt.Printf("Error creating project file: %v\n", err)
+				return
+			}
+		}
 	}
 
 	updateGitignore()
