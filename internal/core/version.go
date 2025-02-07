@@ -91,6 +91,11 @@ func InstallGodotVersion(version GodotVersion) error {
 		return err
 	}
 
+	gdIgnorePath := filepath.Join("dependencies", ".gdignore")
+	if _, err := os.Create(gdIgnorePath); err != nil {
+		return err
+	}
+
 	zipName := filepath.Base(version.URL)
 	zipPath := filepath.Join("dependencies", zipName)
 
