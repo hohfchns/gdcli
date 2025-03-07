@@ -49,6 +49,13 @@ var VersionManifest = []GodotVersion{
 		URL:         "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_mono_linux_x86_64.zip",
 		OS:          "linux",
 	},
+	{
+		DisplayName: "4.4.0 (Standard)",
+		Version:     "4.4.0",
+		DotNet:      false,
+		URL:         "https://github.com/godotengine/godot-builds/releases/download/4.4-stable/Godot_v4.4-stable_linux.x86_64.zip",
+		OS:          "linux",
+	},
 	// Add more versions as needed
 }
 
